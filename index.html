@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard Izin Keluar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050B18;
+    --panel: #0E1A33;
+    --panel-2: #122040;
+    --line: #1E3660;
+    --text: #F2F7FF;
+    --text-muted: #7FA5D9;
+    --calm: #2F8CFF;
+    --calm-bright: #4FC3FF;
+    --warn: #F5A623;
+    --danger: #F76C6C;
+    --calm-bg: rgba(47, 140, 255, 0.14);
+    --warn-bg: rgba(245, 166, 35, 0.10);
+    --danger-bg: rgba(247, 108, 108, 0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+  }
+
+  /* ===== HERO / HEADER dengan efek angin ===== */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    background: linear-gradient(160deg, #123166 0%, #071227 65%);
+    border: 1px solid var(--line);
+    box-shadow: 0 0 60px rgba(47, 140, 255, 0.12);
+    padding: 36px 32px;
+    margin-bottom: 28px;
+  }
+
+  .wind-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .wind-line {
+    position: absolute;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(79,195,255,0.9), transparent);
+    box-shadow: 0 0 8px rgba(79,195,255,0.6);
+    animation: blow linear infinite;
+  }
+
+  @keyframes blow {
+    from { transform: translateX(-40%); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    to { transform: translateX(140%); opacity: 0; }
+  }
+
+  .hero-top {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .eyebrow {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 6px;
+    letter-spacing: 0.01em;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(26px, 3.4vw, 34px);
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .hero-sub {
+    color: var(--text-muted);
+    font-size: 14.5px;
+    margin-top: 8px;
+    max-width: 46ch;
+    line-height: 1.55;
+  }
+
+  .clock-block {
+    text-align: right;
+  }
+
+  .clock {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--calm-bright);
+    text-shadow: 0 0 18px rgba(79,195,255,0.45);
+  }
+
+  .date {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    margin-top: 2px;
+  }
+
+  .sync-status {
+    font-size: 12px;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+  }
+
+  .sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .sync-status.ok .sync-dot { background: var(--calm-bright); box-shadow: 0 0 6px rgba(79,195,255,0.8); }
+  .sync-status.ok { color: var(--calm-bright); }
+  .sync-status.error .sync-dot { background: var(--danger); }
+  .sync-status.error { color: var(--danger); }
+
+  /* ===== PANEL AKSI CEPAT ===== */
+  .action-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #staffSelect {
+    flex: 1;
+    min-width: 200px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    outline: none;
+  }
+
+  #staffSelect:focus { border-color: var(--calm-bright); }
+
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #06121F;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-keluar {
+    background: linear-gradient(180deg, #4ADE80, #22C55E);
+  }
+
+  .btn-kembali {
+    background: linear-gradient(180deg, var(--calm-bright), var(--calm));
+    color: #06121F;
+  }
+
+  .action-message {
+    margin-top: 12px;
+    font-size: 13.5px;
+    min-height: 18px;
+  }
+
+  .action-message.success { color: #4ADE80; }
+  .action-message.error { color: var(--danger); }
+  .action-message.info { color: var(--text-muted); }
+
+  /* ===== KPI STRIP (instrument panel, bukan kartu terpisah) ===== */
+  .kpi-strip {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(47, 140, 255, 0.06);
+  }
+
+  .kpi {
+    padding: 20px 22px;
+    border-right: 1px solid var(--line);
+  }
+  .kpi:last-child { border-right: none; }
+
+  .kpi-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 30px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--calm-bright);
+  }
+
+  .kpi-value.calm { color: var(--calm-bright); }
+  .kpi-value.warn { color: var(--warn); }
+  .kpi-value.danger { color: var(--danger); }
+
+  .kpi-note {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* ===== SECTION HEADER ===== */
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    position: relative;
+    padding-left: 14px;
+  }
+
+  .section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 3px;
+    bottom: 3px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--calm-bright);
+    box-shadow: 0 0 8px rgba(79,195,255,0.6);
+  }
+
+  .section-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ===== TABEL MONITORING ===== */
+  .table-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  tbody td {
+    padding: 14px 18px;
+    font-size: 14.5px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    border-left: 3px solid transparent;
+  }
+
+  tbody tr.status-calm { border-left-color: var(--calm); background: var(--calm-bg); }
+  tbody tr.status-warn { border-left-color: var(--warn); background: var(--warn-bg); }
+  tbody tr.status-danger { border-left-color: var(--danger); background: var(--danger-bg); }
+  tbody tr.status-idle { border-left-color: var(--line); }
+
+  .name-cell { font-weight: 500; }
+  .dept-tag {
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .pill.calm { color: var(--calm-bright); background: rgba(79,195,255,0.16); }
+  .pill.warn { color: var(--warn); background: rgba(245,166,35,0.14); }
+  .pill.danger { color: var(--danger); background: rgba(247,108,108,0.14); }
+  .pill.idle { color: var(--text-muted); background: rgba(138,150,180,0.10); }
+
+  .countdown {
+    display: inline-block;
+    margin-left: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--calm-bright);
+  }
+
+  .countdown.warn { color: var(--warn); }
+  .countdown.danger { color: var(--danger); }
+
+  /* ===== GRAFIK POLA JAM (wind-speed style bars) ===== */
+  .chart-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 22px 16px;
+  }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .bar {
+    width: 100%;
+    max-width: 18px;
+    background: linear-gradient(180deg, var(--calm-bright), var(--calm));
+    box-shadow: 0 0 10px rgba(79,195,255,0.35);
+    border-radius: 3px 3px 0 0;
+    min-height: 2px;
+  }
+
+  .bar-hour {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .foot-note {
+    margin-top: 22px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- HERO -->
+    <div class="hero" id="hero">
+      <div class="wind-layer" id="windLayer"></div>
+      <div class="hero-top">
+        <div>
+          <p class="eyebrow">Sistem Izin Keluar</p>
+          <h1>Ruang kontrol staf hari ini</h1>
+          <p class="hero-sub">Memantau siapa sedang di luar, berapa lama, dan siapa yang mendekati batas waktu.</p>
+        </div>
+        <div class="clock-block">
+          <div class="clock" id="clock">--:--:--</div>
+          <div class="date" id="dateLabel">-</div>
+          <div class="sync-status" id="syncStatus">Memuat data...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AKSI CEPAT: KELUAR / KEMBALI -->
+    <div class="action-panel" id="actionPanel">
+      <div class="action-row">
+        <select id="staffSelect">
+          <option value="">Pilih nama staff...</option>
+        </select>
+        <button id="btnKeluar" class="btn btn-keluar">🟢 KELUAR</button>
+        <button id="btnKembali" class="btn btn-kembali">🔵 KEMBALI</button>
+      </div>
+      <div class="action-message" id="actionMessage"></div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi">
+        <div class="kpi-label">Total karyawan aktif</div>
+        <div class="kpi-value" id="kpiKaryawan">-</div>
+        <div class="kpi-note">CS &amp; Kasir</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Izin tercatat hari ini</div>
+        <div class="kpi-value" id="kpiIzin">-</div>
+        <div class="kpi-note">Total transaksi hari ini</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Sedang di luar</div>
+        <div class="kpi-value calm" id="kpiKeluar">-</div>
+        <div class="kpi-note">Batas orang bersamaan</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Lewat 20 menit</div>
+        <div class="kpi-value warn" id="kpiLewat">-</div>
+        <div class="kpi-note">Perlu ditindaklanjuti</div>
+      </div>
+    </div>
+
+    <!-- MONITORING -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Status staf hari ini</div>
+        <div class="section-meta" id="tanggalLabel">-</div>
+      </div>
+      <div class="table-panel">
+        <table>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Departemen</th>
+              <th>Izin</th>
+              <th>Sisa</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="monitoringBody">
+            <tr class="status-idle">
+              <td colspan="5" style="text-align:center; color:var(--text-muted);">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GRAFIK JAM -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Pola jam keluar</div>
+        <div class="section-meta">00:00 &ndash; 23:00</div>
+      </div>
+      <div class="chart-panel">
+        <div class="bars" id="bars"></div>
+      </div>
+    </div>
+
+    <p class="foot-note">
+      Tampilan ini adalah contoh desain statis dengan data ilustrasi. Untuk menghubungkan ke
+      data asli dari Google Sheets "SISTEM IZIN KELUAR", sheet perlu dipublikasikan sebagai
+      Web App (Apps Script) yang mengeluarkan data dalam format JSON, lalu halaman ini
+      mengambilnya secara berkala. Beri tahu saya kalau ingin dibantu langkah ini.
+    </p>
+
+  </div>
+
+<script>
+  // ====== KONFIGURASI ======
+  // Tempel URL Web App Apps Script kamu di sini (hasil Deploy > New deployment > Web app)
+  const CONFIG = {
+    API_URL: "https://script.google.com/macros/s/AKfycbymafKDcE-Wl7NvuGFlBvtSipt_OX-3OaFQ8RipO3L8v0e--BLZlZHO3xgE-Hn7xBdo/exec",
+    REFRESH_MS: 20000 // refresh data setiap 20 detik
+  };
+
+  // Jam client real-time (selalu jalan, tidak tergantung data sheet)
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // Efek garis angin di hero
+  const windLayer = document.getElementById('windLayer');
+  const LINE_COUNT = 10;
+  for (let i = 0; i < LINE_COUNT; i++) {
+    const line = document.createElement('div');
+    line.className = 'wind-line';
+    const top = Math.random() * 100;
+    const width = 120 + Math.random() * 220;
+    const duration = 6 + Math.random() * 6;
+    const delay = Math.random() * 8;
+    line.style.top = top + '%';
+    line.style.width = width + 'px';
+    line.style.animationDuration = duration + 's';
+    line.style.animationDelay = delay + 's';
+    windLayer.appendChild(line);
+  }
+
+  function setSyncStatus(state, text) {
+    const el = document.getElementById('syncStatus');
+    el.className = 'sync-status ' + state;
+    el.innerHTML = '<span class="sync-dot"></span>' + text;
+  }
+
+  // Menyimpan info staff yang sedang keluar, untuk hitung mundur per detik
+  let activeCountdowns = {}; // { nama: { jamKeluarDetik, offsetDetikSaatFetch, clientTimeSaatFetch } }
+  let maxDurasiMenit = 20;
+
+  function statusToClassAndLabel(status) {
+    switch (status) {
+      case 'SEDANG KELUAR': return { cls: 'calm', pill: 'calm', label: 'Sedang keluar' };
+      case '>20 MENIT':      return { cls: 'danger', pill: 'danger', label: 'Lewat 20 menit' };
+      case 'OK':             return { cls: 'idle', pill: 'idle', label: 'Sudah kembali (OK)' };
+      default:                return { cls: 'idle', pill: 'idle', label: 'Belum izin' };
+    }
+  }
+
+  function renderMonitoring(monitoring) {
+    const body = document.getElementById('monitoringBody');
+    body.innerHTML = '';
+    activeCountdowns = {};
+
+    if (!monitoring || monitoring.length === 0) {
+      body.innerHTML = '<tr class="status-idle"><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
+      return;
+    }
+    monitoring.forEach(row => {
+      const meta = statusToClassAndLabel(row.status);
+      const tr = document.createElement('tr');
+      tr.className = 'status-' + meta.cls;
+
+      let countdownHtml = '';
+      if (row.status === 'SEDANG KELUAR' && row.jamKeluarDetik !== null && row.jamKeluarDetik !== undefined) {
+        const safeId = 'cd-' + row.nama.replace(/[^a-zA-Z0-9]/g, '');
+        countdownHtml = '<span class="countdown" id="' + safeId + '">--:--</span>';
+        activeCountdowns[safeId] = row.jamKeluarDetik;
+      }
+
+      tr.innerHTML = `
+        <td class="name-cell">${row.nama}</td>
+        <td class="dept-tag">${row.departemen}</td>
+        <td>${row.izin}</td>
+        <td>${row.sisa}</td>
+        <td><span class="pill ${meta.pill}">${meta.label}</span>${countdownHtml}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  function tickCountdowns() {
+    const now = new Date();
+    const nowDetik = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const batasDetik = maxDurasiMenit * 60;
+
+    Object.keys(activeCountdowns).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const jamKeluarDetik = activeCountdowns[id];
+      let elapsed = nowDetik - jamKeluarDetik;
+      if (elapsed < 0) elapsed += 86400; // lewat tengah malam
+      const remaining = batasDetik - elapsed;
+
+      const absRemaining = Math.abs(remaining);
+      const mm = String(Math.floor(absRemaining / 60)).padStart(2, '0');
+      const ss = String(absRemaining % 60).padStart(2, '0');
+
+      el.classList.remove('warn', 'danger');
+      if (remaining <= 0) {
+        el.textContent = '+' + mm + ':' + ss + ' lewat';
+        el.classList.add('danger');
+      } else if (remaining <= 60) {
+        el.textContent = 'Sisa ' + mm + ':' + ss;
+        el.classList.add('warn');
+      } else {
+        el.textContent = 'Sisa ' + mm + ':' + ss;
+      }
+    });
+  }
+
+  setInterval(tickCountdowns, 1000);
+
+  function populateStaffSelect(monitoring) {
+    const select = document.getElementById('staffSelect');
+    const prevValue = select.value;
+    select.innerHTML = '<option value="">Pilih nama staff...</option>';
+    (monitoring || []).forEach(row => {
+      const opt = document.createElement('option');
+      opt.value = row.nama;
+      opt.textContent = row.nama + ' (' + row.departemen + ')';
+      select.appendChild(opt);
+    });
+    if (prevValue) select.value = prevValue;
+  }
+
+  function setActionMessage(type, text) {
+    const el = document.getElementById('actionMessage');
+    el.className = 'action-message ' + type;
+    el.textContent = text;
+  }
+
+  function setButtonsDisabled(disabled) {
+    document.getElementById('btnKeluar').disabled = disabled;
+    document.getElementById('btnKembali').disabled = disabled;
+  }
+
+  async function doAction(action) {
+    const nama = document.getElementById('staffSelect').value;
+    if (!nama) {
+      setActionMessage('error', 'Pilih nama staff terlebih dahulu.');
+      return;
+    }
+    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf('TEMPEL_URL') !== -1) {
+      setActionMessage('error', 'URL Web App belum diisi di CONFIG.API_URL.');
+      return;
+    }
+    setButtonsDisabled(true);
+    setActionMessage('info', 'Memproses ' + action.toLowerCase() + ' untuk ' + nama + '...');
+    try {
+      const res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, nama: nama })
+      });
+      const result = await res.json();
+      if (result.success) {
+        setActionMessage('success', '✓ ' + result.message);
+        fetchData();
+      } else {
+        setActionMessage('error', '✕ ' + result.message);
+      }
+    } catch (err) {
+      setActionMessage('error', 'Gagal terhubung ke server — ' + err.message);
+    } finally {
+      setButtonsDisabled(false);
+    }
+  }
+
+  document.getElementById('btnKeluar').addEventListener('click', () => doAction('KELUAR'));
+  document.getElementById('btnKembali').addEventListener('click', () => doAction('KEMBALI'));
+
+  function renderJam(jam) {
+    const barsEl = document.getElementById('bars');
+    barsEl.innerHTML = '';
+    const values = jam.map(j => j.jumlah);
+    const maxVal = Math.max(...values, 1);
+    jam.forEach(j => {
+      const col = document.createElement('div');
+      col.className = 'bar-col';
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      const heightPct = (j.jumlah / maxVal) * 100;
+      bar.style.height = Math.max(heightPct, 2) + '%';
+      const label = document.createElement('div');
+      label.className = 'bar-hour';
+      label.textContent = j.jam;
+      col.appendChild(bar);
+      col.appendChild(label);
+      barsEl.appendChild(col);
+    });
+  }
+
+  async function fetchData() {
+    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf('TEMPEL_URL') !== -1) {
+      setSyncStatus('error', 'URL Web App belum diisi di CONFIG.API_URL');
+      return;
+    }
+    try {
+      setSyncStatus('', 'Menyinkronkan...');
+      const res = await fetch(CONFIG.API_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      document.getElementById('kpiKaryawan').textContent = data.totalKaryawan;
+      document.getElementById('kpiIzin').textContent = data.totalIzinHariIni;
+      document.getElementById('kpiKeluar').textContent = data.sedangKeluar;
+      document.getElementById('kpiLewat').textContent = data.lebih20Menit;
+      document.getElementById('dateLabel').textContent = data.tanggal + ' WIB';
+      document.getElementById('tanggalLabel').textContent = data.tanggal;
+
+      if (data.maxDurasiMenit) maxDurasiMenit = data.maxDurasiMenit;
+
+      renderMonitoring(data.monitoring);
+      renderJam(data.jam);
+      populateStaffSelect(data.monitoring);
+      tickCountdowns();
+
+      const now = new Date();
+      setSyncStatus('ok', 'Tersinkron ' + now.toLocaleTimeString('id-ID', { hour12: false }));
+    } catch (err) {
+      console.error(err);
+      setSyncStatus('error', 'Gagal memuat data — ' + err.message);
+    }
+  }
+
+  fetchData();
+  setInterval(fetchData, CONFIG.REFRESH_MS);
+</script>
+</body>
+</html>
