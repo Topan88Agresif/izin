@@ -326,7 +326,7 @@
     border-left: 3px solid transparent;
   }
 
-  tbody tr.status-calm { border-left-color: var(--calm); background: var(--calm-bg); }
+  tbody tr.status-calm { border-left-color: #4ADE80; background: rgba(74,222,128,0.08); }
   tbody tr.status-warn { border-left-color: var(--warn); background: var(--warn-bg); }
   tbody tr.status-danger { border-left-color: var(--danger); background: var(--danger-bg); }
   tbody tr.status-idle { border-left-color: var(--line); }
@@ -344,44 +344,115 @@
     font-size: 12.5px;
     font-weight: 500;
   }
-  .pill.calm { color: var(--calm-bright); background: rgba(79,195,255,0.16); }
+  .pill.calm { color: #4ADE80; background: rgba(74,222,128,0.16); }
   .pill.warn { color: var(--warn); background: rgba(245,166,35,0.14); }
   .pill.danger { color: var(--danger); background: rgba(247,108,108,0.14); }
   .pill.idle { color: var(--text-muted); background: rgba(138,150,180,0.10); }
 
   .countdown {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 5px 9px;
-  border-radius: 6px;
-  background: rgba(79, 195, 255, 0.12);
-  color: var(--calm-bright);
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.countdown.warn {
-  color: var(--warn);
-  background: rgba(245, 166, 35, 0.15);
-}
-
-.countdown.danger {
-  color: var(--danger);
-  background: rgba(247, 108, 108, 0.16);
-  animation: blinkDanger 1s infinite;
-}
-
-@keyframes blinkDanger {
-  50% {
-    opacity: 0.55;
+    display: inline-block;
+    margin-left: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--calm-bright);
   }
-}
 
   .countdown.warn { color: var(--warn); }
   .countdown.danger { color: var(--danger); }
+
+  /* ===== TIMER LINGKARAN ===== */
+  .timer-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    min-height: 60px;
+  }
+
+  .timer-empty {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  .timer-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 28px;
+  }
+
+  .timer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .timer-ring {
+    --pct: 100;
+    --ring-color: #4FC3FF;
+    width: 148px;
+    height: 148px;
+    border-radius: 50%;
+    background: conic-gradient(var(--ring-color) calc(var(--pct) * 1%), rgba(255,255,255,0.08) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 22px rgba(79,195,255,0.18);
+  }
+
+  .timer-ring.warn { box-shadow: 0 0 22px rgba(245,166,35,0.25); }
+  .timer-ring.danger { box-shadow: 0 0 22px rgba(247,108,108,0.3); }
+  .timer-ring.danger .timer-digits { animation: pulseText 1s ease-in-out infinite; }
+
+  @keyframes pulseText {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .timer-inner {
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .timer-digits {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  .timer-caption {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .timer-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+  }
+
+  .timer-dept {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: -6px;
+  }
 
   /* ===== GRAFIK POLA JAM (wind-speed style bars) ===== */
   .chart-panel {
@@ -462,6 +533,17 @@
         <button id="btnKembali" class="btn btn-kembali">🔵 KEMBALI</button>
       </div>
       <div class="action-message" id="actionMessage"></div>
+    </div>
+
+    <!-- TIMER LINGKARAN — STAFF YANG SEDANG KELUAR -->
+    <div class="section" id="timerSection">
+      <div class="section-head">
+        <div class="section-title">Sedang keluar — sisa waktu</div>
+      </div>
+      <div class="timer-panel" id="timerPanel">
+        <div class="timer-empty" id="timerEmpty">Tidak ada staff yang sedang keluar saat ini.</div>
+        <div class="timer-grid" id="timerGrid"></div>
+      </div>
     </div>
 
     <!-- KPI STRIP -->
@@ -575,168 +657,130 @@
 
   // Menyimpan info staff yang sedang keluar, untuk hitung mundur per detik
   let activeCountdowns = {}; // { nama: { jamKeluarDetik, offsetDetikSaatFetch, clientTimeSaatFetch } }
-  let localExitTimes = {};
   let maxDurasiMenit = 20;
 
   function statusToClassAndLabel(status) {
-  switch (status) {
-    case 'SEDANG KELUAR':
-      return {
-        cls: 'calm',
-        pill: 'calm',
-        label: 'Sedang keluar'
-      };
-
-    case '>20 MENIT':
-      return {
-        cls: 'danger',
-        pill: 'danger',
-        label: 'Lewat 20 menit'
-      };
-
-    case 'OK':
-      return {
-        cls: 'idle',
-        pill: 'idle',
-        label: 'Sudah kembali (OK)'
-      };
-
-    default:
-      return {
-        cls: 'idle',
-        pill: 'idle',
-        label: 'Belum izin'
-      };
+    switch (status) {
+      case 'SEDANG KELUAR': return { cls: 'calm', pill: 'calm', label: 'Sedang keluar' };
+      case '>20 MENIT':      return { cls: 'danger', pill: 'danger', label: 'Lewat 20 menit' };
+      case 'OK':             return { cls: 'idle', pill: 'idle', label: 'Sudah kembali (OK)' };
+      default:                return { cls: 'idle', pill: 'idle', label: 'Belum izin' };
+    }
   }
-}
 
   function renderMonitoring(monitoring) {
-  const body = document.getElementById('monitoringBody');
+    const body = document.getElementById('monitoringBody');
+    body.innerHTML = '';
+    activeCountdowns = {};
 
-  body.innerHTML = '';
-  activeCountdowns = {};
+    const timerGrid = document.getElementById('timerGrid');
+    const timerEmpty = document.getElementById('timerEmpty');
+    timerGrid.innerHTML = '';
 
-  if (!monitoring || monitoring.length === 0) {
-    body.innerHTML = `
-      <tr class="status-idle">
-        <td colspan="5" style="text-align:center; color:var(--text-muted);">
-          Belum ada data staf.
-        </td>
-      </tr>
-    `;
-    return;
+    if (!monitoring || monitoring.length === 0) {
+      body.innerHTML = '<tr class="status-idle"><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
+      timerEmpty.style.display = 'block';
+      return;
+    }
+
+    let adaSedangKeluar = false;
+
+    monitoring.forEach(row => {
+      const meta = statusToClassAndLabel(row.status);
+      const tr = document.createElement('tr');
+      tr.className = 'status-' + meta.cls;
+
+      let countdownHtml = '';
+      const isOut = row.status === 'SEDANG KELUAR' && row.jamKeluarDetik !== null && row.jamKeluarDetik !== undefined;
+
+      if (isOut) {
+        adaSedangKeluar = true;
+        const safeId = 'cd-' + row.nama.replace(/[^a-zA-Z0-9]/g, '');
+        countdownHtml = '<span class="countdown" id="' + safeId + '">--:--</span>';
+        activeCountdowns[safeId] = { jamKeluarDetik: row.jamKeluarDetik, nama: row.nama, departemen: row.departemen };
+
+        // Kartu timer lingkaran
+        const card = document.createElement('div');
+        card.className = 'timer-card';
+        card.innerHTML = `
+          <div class="timer-ring" id="ring-${safeId}">
+            <div class="timer-inner">
+              <div class="timer-digits" id="digits-${safeId}">--:--</div>
+              <div class="timer-caption">Sisa waktu</div>
+            </div>
+          </div>
+          <div class="timer-name">${row.nama}</div>
+          <div class="timer-dept">${row.departemen}</div>
+        `;
+        timerGrid.appendChild(card);
+      }
+
+      tr.innerHTML = `
+        <td class="name-cell">${row.nama}</td>
+        <td class="dept-tag">${row.departemen}</td>
+        <td>${row.izin}</td>
+        <td>${row.sisa}</td>
+        <td><span class="pill ${meta.pill}">${meta.label}</span>${countdownHtml}</td>
+      `;
+      body.appendChild(tr);
+    });
+
+    timerEmpty.style.display = adaSedangKeluar ? 'none' : 'block';
   }
 
-  monitoring.forEach((row, index) => {
-    const meta = statusToClassAndLabel(row.status);
-    const tr = document.createElement('tr');
+  function tickCountdowns() {
+    const now = new Date();
+    const nowDetik = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const batasDetik = maxDurasiMenit * 60;
 
-    tr.className = 'status-' + meta.cls;
+    Object.keys(activeCountdowns).forEach(safeId => {
+      const info = activeCountdowns[safeId];
+      const badgeEl = document.getElementById(safeId);
+      const ringEl = document.getElementById('ring-' + safeId);
+      const digitsEl = document.getElementById('digits-' + safeId);
 
-    const safeId = 'countdown-' + index;
+      let elapsed = nowDetik - info.jamKeluarDetik;
+      if (elapsed < 0) elapsed += 86400;
+      const remaining = batasDetik - elapsed;
+      const absRemaining = Math.abs(remaining);
+      const mm = String(Math.floor(absRemaining / 60)).padStart(2, '0');
+      const ss = String(absRemaining % 60).padStart(2, '0');
 
-    let countdownHtml = '';
+      let stateClass = '';
+      let ringColor = '#4FC3FF';
+      let pct = Math.max(0, Math.min(100, (remaining / batasDetik) * 100));
+      let digitsText = mm + ':' + ss;
+      let badgeText = 'Sisa ' + mm + ':' + ss;
 
-    if (row.status === 'SEDANG KELUAR') {
-      let jamKeluarDetik = Number(row.jamKeluarDetik);
-
-      /*
-       * Jika server belum mengirim jamKeluarDetik,
-       * gunakan waktu lokal ketika tombol KELUAR diklik.
-       */
-      if (!Number.isFinite(jamKeluarDetik)) {
-        jamKeluarDetik = localExitTimes[row.nama];
+      if (remaining <= 0) {
+        stateClass = 'danger';
+        ringColor = '#F76C6C';
+        pct = 100;
+        digitsText = '+' + mm + ':' + ss;
+        badgeText = '+' + mm + ':' + ss + ' lewat';
+      } else if (remaining <= 60) {
+        stateClass = 'warn';
+        ringColor = '#F5A623';
       }
 
-      if (Number.isFinite(jamKeluarDetik)) {
-        countdownHtml = `
-          <span
-            class="countdown"
-            id="${safeId}"
-            data-jam-keluar="${jamKeluarDetik}">
-            Memuat...
-          </span>
-        `;
-
-        activeCountdowns[safeId] = {
-          nama: row.nama,
-          jamKeluarDetik: jamKeluarDetik
-        };
+      if (badgeEl) {
+        badgeEl.textContent = badgeText;
+        badgeEl.classList.remove('warn', 'danger');
+        if (stateClass) badgeEl.classList.add(stateClass);
       }
-    } else {
-      delete localExitTimes[row.nama];
-    }
+      if (ringEl) {
+        ringEl.style.setProperty('--pct', pct);
+        ringEl.style.setProperty('--ring-color', ringColor);
+        ringEl.classList.remove('warn', 'danger');
+        if (stateClass) ringEl.classList.add(stateClass);
+      }
+      if (digitsEl) {
+        digitsEl.textContent = digitsText;
+      }
+    });
+  }
 
-    tr.innerHTML = `
-      <td class="name-cell">${escapeHtml(row.nama)}</td>
-      <td class="dept-tag">${escapeHtml(row.departemen)}</td>
-      <td>${escapeHtml(row.izin)}</td>
-      <td>${escapeHtml(row.sisa)}</td>
-      <td>
-        <span class="pill ${meta.pill}">
-          ${meta.label}
-        </span>
-        ${countdownHtml}
-      </td>
-    `;
-
-    body.appendChild(tr);
-  });
-
-  tickCountdowns();
-}
-  
-
-function tickCountdowns() {
-  const now = new Date();
-
-  const nowDetik =
-    now.getHours() * 3600 +
-    now.getMinutes() * 60 +
-    now.getSeconds();
-
-  const batasDetik = Number(maxDurasiMenit) * 60;
-
-  Object.keys(activeCountdowns).forEach(id => {
-    const countdown = activeCountdowns[id];
-    const el = document.getElementById(id);
-
-    if (!el || !countdown) return;
-
-    let elapsed = nowDetik - countdown.jamKeluarDetik;
-
-    // Menangani pergantian hari
-    if (elapsed < 0) {
-      elapsed += 86400;
-    }
-
-    const remaining = batasDetik - elapsed;
-    const absoluteTime = Math.abs(remaining);
-
-    const minutes = Math.floor(absoluteTime / 60);
-    const seconds = absoluteTime % 60;
-
-    const formattedTime =
-      String(minutes).padStart(2, '0') +
-      ':' +
-      String(seconds).padStart(2, '0');
-
-    el.classList.remove('warn', 'danger');
-
-    if (remaining <= 0) {
-      el.textContent = '+' + formattedTime + ' lewat';
-      el.classList.add('danger');
-    } else if (remaining <= 60) {
-      el.textContent = 'Sisa ' + formattedTime;
-      el.classList.add('warn');
-    } else {
-      el.textContent = 'Sisa ' + formattedTime;
-    }
-  });
-}
-
-setInterval(tickCountdowns, 1000);
-
+  setInterval(tickCountdowns, 1000);
 
   function populateStaffSelect(monitoring) {
     const select = document.getElementById('staffSelect');
@@ -762,7 +806,37 @@ setInterval(tickCountdowns, 1000);
     document.getElementById('btnKembali').disabled = disabled;
   }
 
-
+  async function doAction(action) {
+    const nama = document.getElementById('staffSelect').value;
+    if (!nama) {
+      setActionMessage('error', 'Pilih nama staff terlebih dahulu.');
+      return;
+    }
+    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf('TEMPEL_URL') !== -1) {
+      setActionMessage('error', 'URL Web App belum diisi di CONFIG.API_URL.');
+      return;
+    }
+    setButtonsDisabled(true);
+    setActionMessage('info', 'Memproses ' + action.toLowerCase() + ' untuk ' + nama + '...');
+    try {
+      const res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, nama: nama })
+      });
+      const result = await res.json();
+      if (result.success) {
+        setActionMessage('success', '✓ ' + result.message);
+        fetchData();
+      } else {
+        setActionMessage('error', '✕ ' + result.message);
+      }
+    } catch (err) {
+      setActionMessage('error', 'Gagal terhubung ke server — ' + err.message);
+    } finally {
+      setButtonsDisabled(false);
+    }
+  }
 
   document.getElementById('btnKeluar').addEventListener('click', () => doAction('KELUAR'));
   document.getElementById('btnKembali').addEventListener('click', () => doAction('KEMBALI'));
@@ -809,7 +883,7 @@ setInterval(tickCountdowns, 1000);
 
       if (data.maxDurasiMenit) maxDurasiMenit = data.maxDurasiMenit;
 
-renderMonitoring(data.monitoring);
+      renderMonitoring(data.monitoring);
       renderJam(data.jam);
       populateStaffSelect(data.monitoring);
       tickCountdowns();
