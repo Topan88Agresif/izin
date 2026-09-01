@@ -589,68 +589,132 @@
   }
 
   function renderMonitoring(monitoring) {
-    const body = document.getElementById('monitoringBody');
-    body.innerHTML = '';
-    activeCountdowns = {};
+  const body = document.getElementById('monitoringBody');
 
-    if (!monitoring || monitoring.length === 0) {
-      body.innerHTML = '<tr class="status-idle"><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
-      return;
+  body.innerHTML = '';
+  activeCountdowns = {};
+
+  if (!monitoring || monitoring.length === 0) {
+    body.innerHTML = `
+      <tr class="status-idle">
+        <td colspan="5" style="text-align:center; color:var(--text-muted);">
+          Belum ada data staf.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  monitoring.forEach((row, index) => {
+    const meta = statusToClassAndLabel(row.status);
+    const tr = document.createElement('tr');
+
+    tr.className = 'status-' + meta.cls;
+
+    const safeId = 'countdown-' + index;
+
+    let countdownHtml = '';
+
+    if (row.status === 'SEDANG KELUAR') {
+      let jamKeluarDetik = Number(row.jamKeluarDetik);
+
+      /*
+       * Jika server belum mengirim jamKeluarDetik,
+       * gunakan waktu lokal ketika tombol KELUAR diklik.
+       */
+      if (!Number.isFinite(jamKeluarDetik)) {
+        jamKeluarDetik = localExitTimes[row.nama];
+      }
+
+      if (Number.isFinite(jamKeluarDetik)) {
+        countdownHtml = `
+          <span
+            class="countdown"
+            id="${safeId}"
+            data-jam-keluar="${jamKeluarDetik}">
+            Memuat...
+          </span>
+        `;
+
+        activeCountdowns[safeId] = {
+          nama: row.nama,
+          jamKeluarDetik: jamKeluarDetik
+        };
+      }
+    } else {
+      delete localExitTimes[row.nama];
     }
-    monitoring.forEach(row => {
-      const meta = statusToClassAndLabel(row.status);
-      const tr = document.createElement('tr');
-      tr.className = 'status-' + meta.cls;
 
-      let countdownHtml = '';
-      if (row.status === 'SEDANG KELUAR' && row.jamKeluarDetik !== null && row.jamKeluarDetik !== undefined) {
-        const safeId = 'cd-' + row.nama.replace(/[^a-zA-Z0-9]/g, '');
-        countdownHtml = '<span class="countdown" id="' + safeId + '">--:--</span>';
-        activeCountdowns[safeId] = row.jamKeluarDetik;
-      }
+    tr.innerHTML = `
+      <td class="name-cell">${escapeHtml(row.nama)}</td>
+      <td class="dept-tag">${escapeHtml(row.departemen)}</td>
+      <td>${escapeHtml(row.izin)}</td>
+      <td>${escapeHtml(row.sisa)}</td>
+      <td>
+        <span class="pill ${meta.pill}">
+          ${meta.label}
+        </span>
+        ${countdownHtml}
+      </td>
+    `;
 
-      tr.innerHTML = `
-        <td class="name-cell">${row.nama}</td>
-        <td class="dept-tag">${row.departemen}</td>
-        <td>${row.izin}</td>
-        <td>${row.sisa}</td>
-        <td><span class="pill ${meta.pill}">${meta.label}</span>${countdownHtml}</td>
-      `;
-      body.appendChild(tr);
-    });
-  }
+    body.appendChild(tr);
+  });
 
-  function tickCountdowns() {
-    const now = new Date();
-    const nowDetik = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    const batasDetik = maxDurasiMenit * 60;
+  tickCountdowns();
+}
+  
 
-    Object.keys(activeCountdowns).forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const jamKeluarDetik = activeCountdowns[id];
-      let elapsed = nowDetik - jamKeluarDetik;
-      if (elapsed < 0) elapsed += 86400; // lewat tengah malam
-      const remaining = batasDetik - elapsed;
+function tickCountdowns() {
+  const now = new Date();
 
-      const absRemaining = Math.abs(remaining);
-      const mm = String(Math.floor(absRemaining / 60)).padStart(2, '0');
-      const ss = String(absRemaining % 60).padStart(2, '0');
+  const nowDetik =
+    now.getHours() * 3600 +
+    now.getMinutes() * 60 +
+    now.getSeconds();
 
-      el.classList.remove('warn', 'danger');
-      if (remaining <= 0) {
-        el.textContent = '+' + mm + ':' + ss + ' lewat';
-        el.classList.add('danger');
-      } else if (remaining <= 60) {
-        el.textContent = 'Sisa ' + mm + ':' + ss;
-        el.classList.add('warn');
-      } else {
-        el.textContent = 'Sisa ' + mm + ':' + ss;
-      }
-    });
-  }
+  const batasDetik = Number(maxDurasiMenit) * 60;
 
-  setInterval(tickCountdowns, 1000);
+  Object.keys(activeCountdowns).forEach(id => {
+    const countdown = activeCountdowns[id];
+    const el = document.getElementById(id);
+
+    if (!el || !countdown) return;
+
+    let elapsed = nowDetik - countdown.jamKeluarDetik;
+
+    // Menangani pergantian hari
+    if (elapsed < 0) {
+      elapsed += 86400;
+    }
+
+    const remaining = batasDetik - elapsed;
+    const absoluteTime = Math.abs(remaining);
+
+    const minutes = Math.floor(absoluteTime / 60);
+    const seconds = absoluteTime % 60;
+
+    const formattedTime =
+      String(minutes).padStart(2, '0') +
+      ':' +
+      String(seconds).padStart(2, '0');
+
+    el.classList.remove('warn', 'danger');
+
+    if (remaining <= 0) {
+      el.textContent = '+' + formattedTime + ' lewat';
+      el.classList.add('danger');
+    } else if (remaining <= 60) {
+      el.textContent = 'Sisa ' + formattedTime;
+      el.classList.add('warn');
+    } else {
+      el.textContent = 'Sisa ' + formattedTime;
+    }
+  });
+}
+
+setInterval(tickCountdowns, 1000);
+
 
   function populateStaffSelect(monitoring) {
     const select = document.getElementById('staffSelect');
@@ -753,7 +817,15 @@
 
       if (data.maxDurasiMenit) maxDurasiMenit = data.maxDurasiMenit;
 
-      renderMonitoring(data.monitoring);
+      function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+renderMonitoring(data.monitoring);
       renderJam(data.jam);
       populateStaffSelect(data.monitoring);
       tickCountdowns();
