@@ -351,14 +351,35 @@
   .pill.idle { color: var(--text-muted); background: rgba(138,150,180,0.10); }
 
   .countdown {
-    display: inline-block;
-    margin-left: 8px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12.5px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: var(--calm-bright);
+  display: inline-block;
+  margin-left: 8px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(79, 195, 255, 0.12);
+  color: var(--calm-bright);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.countdown.warn {
+  color: var(--warn);
+  background: rgba(245, 166, 35, 0.15);
+}
+
+.countdown.danger {
+  color: var(--danger);
+  background: rgba(247, 108, 108, 0.16);
+  animation: blinkDanger 1s infinite;
+}
+
+@keyframes blinkDanger {
+  50% {
+    opacity: 0.55;
   }
+}
 
   .countdown.warn { color: var(--warn); }
   .countdown.danger { color: var(--danger); }
