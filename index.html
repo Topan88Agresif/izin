@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -554,6 +555,7 @@
 
   // Menyimpan info staff yang sedang keluar, untuk hitung mundur per detik
   let activeCountdowns = {}; // { nama: { jamKeluarDetik, offsetDetikSaatFetch, clientTimeSaatFetch } }
+  let localExitTimes = {};
   let maxDurasiMenit = 20;
 
   function statusToClassAndLabel(status) {
