@@ -580,13 +580,36 @@
   let maxDurasiMenit = 20;
 
   function statusToClassAndLabel(status) {
-    switch (status) {
-      case 'SEDANG KELUAR': return { cls: 'calm', pill: 'calm', label: 'Sedang keluar' };
-      case '>20 MENIT':      return { cls: 'danger', pill: 'danger', label: 'Lewat 20 menit' };
-      case 'OK':             return { cls: 'idle', pill: 'idle', label: 'Sudah kembali (OK)' };
-      default:                return { cls: 'idle', pill: 'idle', label: 'Belum izin' };
-    }
+  switch (status) {
+    case 'SEDANG KELUAR':
+      return {
+        cls: 'calm',
+        pill: 'calm',
+        label: 'Sedang keluar'
+      };
+
+    case '>20 MENIT':
+      return {
+        cls: 'danger',
+        pill: 'danger',
+        label: 'Lewat 20 menit'
+      };
+
+    case 'OK':
+      return {
+        cls: 'idle',
+        pill: 'idle',
+        label: 'Sudah kembali (OK)'
+      };
+
+    default:
+      return {
+        cls: 'idle',
+        pill: 'idle',
+        label: 'Belum izin'
+      };
   }
+}
 
   function renderMonitoring(monitoring) {
   const body = document.getElementById('monitoringBody');
@@ -740,37 +763,7 @@ setInterval(tickCountdowns, 1000);
     document.getElementById('btnKembali').disabled = disabled;
   }
 
-  async function doAction(action) {
-    const nama = document.getElementById('staffSelect').value;
-    if (!nama) {
-      setActionMessage('error', 'Pilih nama staff terlebih dahulu.');
-      return;
-    }
-    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf('TEMPEL_URL') !== -1) {
-      setActionMessage('error', 'URL Web App belum diisi di CONFIG.API_URL.');
-      return;
-    }
-    setButtonsDisabled(true);
-    setActionMessage('info', 'Memproses ' + action.toLowerCase() + ' untuk ' + nama + '...');
-    try {
-      const res = await fetch(CONFIG.API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, nama: nama })
-      });
-      const result = await res.json();
-      if (result.success) {
-        setActionMessage('success', '✓ ' + result.message);
-        fetchData();
-      } else {
-        setActionMessage('error', '✕ ' + result.message);
-      }
-    } catch (err) {
-      setActionMessage('error', 'Gagal terhubung ke server — ' + err.message);
-    } finally {
-      setButtonsDisabled(false);
-    }
-  }
+
 
   document.getElementById('btnKeluar').addEventListener('click', () => doAction('KELUAR'));
   document.getElementById('btnKembali').addEventListener('click', () => doAction('KEMBALI'));
