@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: transparent;
+    --bg: #050B18;
     --panel: #0E1A33;
     --panel-2: #122040;
     --line: #1E3660;
@@ -28,11 +28,12 @@
 
   body {
     margin: 0;
-    background-image: url('https://cdn.areabermain.club/assets/cdn/az1/2026/09/01/20260901/b9a7221b575febaff31e241a718fb12d/topan-bos-web-background.png');
-    background-size: cover;
-    background-position: center;
+    background:
+      linear-gradient(var(--bg), var(--bg)),
+      repeating-linear-gradient(45deg, rgba(79,195,255,0.05) 0px, rgba(79,195,255,0.05) 1px, transparent 1px, transparent 42px),
+      repeating-linear-gradient(-45deg, rgba(79,195,255,0.04) 0px, rgba(79,195,255,0.04) 1px, transparent 1px, transparent 42px);
     background-attachment: fixed;
-    background-repeat: no-repeat;
+    animation: gridPan 40s linear infinite;
     color: var(--text);
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -40,10 +41,20 @@
     overflow-x: hidden;
   }
 
+  @keyframes gridPan {
+    0% { background-position: 0 0, 0 0, 0 0; }
+    100% { background-position: 0 0, 600px 600px, -600px 600px; }
+  }
 
- body::before,
-body::after {
-    display: none;
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
   }
 
   .neon-portal {
@@ -431,6 +442,21 @@ body::after {
   .countdown.warn { color: var(--warn); }
   .countdown.danger { color: var(--danger); }
 
+  .jam-terakhir {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: #FFD166;
+    text-shadow: 0 0 8px rgba(255, 209, 102, 0.35);
+  }
+
+  .jam-terakhir.empty {
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    text-shadow: none;
+  }
+
   /* ===== TIMER LINGKARAN ===== */
   .timer-panel {
     position: relative;
@@ -559,6 +585,26 @@ body::after {
     opacity: 0.8;
   }
 
+  /* ===== JAM KELUAR TERAKHIR (per kartu timer) ===== */
+  .timer-exit-time {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFD166;
+    text-shadow: 0 0 10px rgba(255, 209, 102, 0.65), 0 0 20px rgba(255, 209, 102, 0.3);
+    letter-spacing: 0.02em;
+    margin-top: -8px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .timer-exit-time .exit-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
   /* ===== GRAFIK POLA JAM (wind-speed style bars) ===== */
   .chart-panel {
     background: var(--panel);
@@ -609,8 +655,6 @@ body::after {
 </style>
 </head>
 <body>
-<div style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:0;pointer-events:none;"></div>
-
   <div class="neon-portal" aria-hidden="true">
     <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
       <polygon points="250,90 400,360 100,360" fill="none" stroke="#39FF7A" stroke-width="3" opacity="0.9"/>
@@ -701,11 +745,12 @@ body::after {
               <th>Izin</th>
               <th>Sisa</th>
               <th>Status</th>
+              <th>Jam Terakhir</th>
             </tr>
           </thead>
           <tbody id="monitoringBody">
             <tr class="status-idle">
-              <td colspan="5" style="text-align:center; color:var(--text-muted);">Memuat data...</td>
+              <td colspan="6" style="text-align:center; color:var(--text-muted);">Memuat data...</td>
             </tr>
           </tbody>
         </table>
@@ -784,6 +829,16 @@ body::after {
     }
   }
 
+  // Format detik-dari-tengah-malam menjadi jam:menit:detik (untuk label "Keluar pukul")
+  function formatJamKeluar(detikTotal) {
+    if (detikTotal === null || detikTotal === undefined) return '--:--:--';
+    const d = ((detikTotal % 86400) + 86400) % 86400; // aman kalau lewat tengah malam
+    const jam = String(Math.floor(d / 3600)).padStart(2, '0');
+    const menit = String(Math.floor((d % 3600) / 60)).padStart(2, '0');
+    const detik = String(d % 60).padStart(2, '0');
+    return jam + ':' + menit + ':' + detik;
+  }
+
   function renderMonitoring(monitoring) {
     const body = document.getElementById('monitoringBody');
     body.innerHTML = '';
@@ -794,7 +849,7 @@ body::after {
     timerGrid.innerHTML = '';
 
     if (!monitoring || monitoring.length === 0) {
-      body.innerHTML = '<tr class="status-idle"><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
+      body.innerHTML = '<tr class="status-idle"><td colspan="6" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
       timerEmpty.style.display = 'block';
       return;
     }
@@ -827,9 +882,15 @@ body::after {
           </div>
           <div class="timer-name">${row.nama}</div>
           <div class="timer-dept">${row.departemen}</div>
+          <div class="timer-exit-time">🕒 Keluar pukul <span class="exit-value">${formatJamKeluar(row.jamKeluarDetik)}</span></div>
         `;
         timerGrid.appendChild(card);
       }
+
+      const adaJamKeluar = row.jamKeluarTerakhirDetik !== null && row.jamKeluarTerakhirDetik !== undefined;
+      const jamTerakhirHtml = adaJamKeluar
+        ? '<span class="jam-terakhir">' + formatJamKeluar(row.jamKeluarTerakhirDetik) + '</span>'
+        : '<span class="jam-terakhir empty">-</span>';
 
       tr.innerHTML = `
         <td class="name-cell">${row.nama}</td>
@@ -837,6 +898,7 @@ body::after {
         <td>${row.izin}</td>
         <td>${row.sisa}</td>
         <td><span class="pill ${meta.pill}">${meta.label}</span>${countdownHtml}</td>
+        <td>${jamTerakhirHtml}</td>
       `;
       body.appendChild(tr);
     });
