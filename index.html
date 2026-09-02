@@ -28,12 +28,10 @@
 
   body {
     margin: 0;
-    background:
-      linear-gradient(var(--bg), var(--bg)),
-      repeating-linear-gradient(45deg, rgba(79,195,255,0.05) 0px, rgba(79,195,255,0.05) 1px, transparent 1px, transparent 42px),
-      repeating-linear-gradient(-45deg, rgba(79,195,255,0.04) 0px, rgba(79,195,255,0.04) 1px, transparent 1px, transparent 42px);
+    background-image: url('https://cdn.areabermain.club/assets/cdn/az1/2026/09/01/20260901/b9a7221b575febaff31e241a718fb12d/topan-bos-web-background.png');
+    background-size: cover;
+    background-position: center;
     background-attachment: fixed;
-    animation: gridPan 40s linear infinite;
     color: var(--text);
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -620,6 +618,8 @@
 </style>
 </head>
 <body>
+<div style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:0;pointer-events:none;"></div>
+
   <div class="neon-portal" aria-hidden="true">
     <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
       <polygon points="250,90 400,360 100,360" fill="none" stroke="#39FF7A" stroke-width="3" opacity="0.9"/>
@@ -1145,18 +1145,13 @@
       t += 0.008;
 
       // Dark background
-      // Background image
-ctx.clearRect(0, 0, W, H);
-if (window._tunnelBg && window._tunnelBg.complete) {
-  ctx.drawImage(window._tunnelBg, 0, 0, W, H);
-  // Overlay gelap agar efek tunnel tetap terlihat
-  ctx.fillStyle = 'rgba(0, 10, 3, 0.55)';
-  ctx.fillRect(0, 0, W, H);
-} else {
-  // Fallback warna hitam selama gambar belum loaded
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, W, H);
-}
+      ctx.clearRect(0, 0, W, H);
+      const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.7);
+      bg.addColorStop(0, '#020d04');
+      bg.addColorStop(0.5, '#010801');
+      bg.addColorStop(1, '#000000');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
 
       const cx = W / 2;
       const cy = H * 0.48;
@@ -1197,14 +1192,8 @@ if (window._tunnelBg && window._tunnelBg.complete) {
       animId = requestAnimationFrame(render);
     }
 
-// Preload background image — ganti URL di bawah ini
-// Preload background image
-window._tunnelBg = new Image();
-document.getElementById('timerPanel').style.backgroundImage = "url('https://cdn.areabermain.club/assets/cdn/az1/2026/09/01/20260901/b9a7221b575febaff31e241a718fb12d/topan-bos-web-background.png')";
-document.getElementById('timerPanel').style.backgroundSize = 'cover';
-document.getElementById('timerPanel').style.backgroundPosition = 'center';
-render();
-})();
+    render();
+  })();
 </script>
 </body>
 </html>
