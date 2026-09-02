@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #050B18;
+    --bg: transparent;
     --panel: #0E1A33;
     --panel-2: #122040;
     --line: #1E3660;
@@ -32,6 +32,7 @@
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--text);
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -39,20 +40,10 @@
     overflow-x: hidden;
   }
 
-  @keyframes gridPan {
-    0% { background-position: 0 0, 0 0, 0 0; }
-    100% { background-position: 0 0, 600px 600px, -600px 600px; }
-  }
 
-  body::before,
-  body::after {
-    content: "";
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.35;
-    z-index: 0;
-    pointer-events: none;
+ body::before,
+body::after {
+    display: none;
   }
 
   .neon-portal {
