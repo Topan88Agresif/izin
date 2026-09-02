@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -30,21 +29,14 @@
   body {
     margin: 0;
     background:
-      linear-gradient(var(--bg), var(--bg)),
-      repeating-linear-gradient(45deg, rgba(79,195,255,0.05) 0px, rgba(79,195,255,0.05) 1px, transparent 1px, transparent 42px),
-      repeating-linear-gradient(-45deg, rgba(79,195,255,0.04) 0px, rgba(79,195,255,0.04) 1px, transparent 1px, transparent 42px);
-    background-attachment: fixed;
-    animation: gridPan 40s linear infinite;
+      linear-gradient(rgba(5,11,24,0.72), rgba(5,11,24,0.72)),
+      url('https://cdn.areabermain.club/assets/cdn/az1/2026/09/01/20260901/b9a7221b575febaff31e241a718fb12d/topan-bos-web-background.png') center center / cover no-repeat fixed;
+    background-attachment: fixed, fixed;
     color: var(--text);
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     position: relative;
     overflow-x: hidden;
-  }
-
-  @keyframes gridPan {
-    0% { background-position: 0 0, 0 0, 0 0; }
-    100% { background-position: 0 0, 600px 600px, -600px 600px; }
   }
 
   body::before,
@@ -443,6 +435,21 @@
   .countdown.warn { color: var(--warn); }
   .countdown.danger { color: var(--danger); }
 
+  .jam-terakhir {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: #FFD166;
+    text-shadow: 0 0 8px rgba(255, 209, 102, 0.35);
+  }
+
+  .jam-terakhir.empty {
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    text-shadow: none;
+  }
+
   /* ===== TIMER LINGKARAN ===== */
   .timer-panel {
     position: relative;
@@ -711,11 +718,12 @@
               <th>Izin</th>
               <th>Sisa</th>
               <th>Status</th>
+              <th>Jam Terakhir</th>
             </tr>
           </thead>
           <tbody id="monitoringBody">
             <tr class="status-idle">
-              <td colspan="5" style="text-align:center; color:var(--text-muted);">Memuat data...</td>
+              <td colspan="6" style="text-align:center; color:var(--text-muted);">Memuat data...</td>
             </tr>
           </tbody>
         </table>
@@ -794,6 +802,16 @@
     }
   }
 
+  // Format detik-dari-tengah-malam menjadi jam:menit:detik (untuk label "Jam Terakhir")
+  function formatJamKeluar(detikTotal) {
+    if (detikTotal === null || detikTotal === undefined) return '--:--:--';
+    const d = ((detikTotal % 86400) + 86400) % 86400; // aman kalau lewat tengah malam
+    const jam = String(Math.floor(d / 3600)).padStart(2, '0');
+    const menit = String(Math.floor((d % 3600) / 60)).padStart(2, '0');
+    const detik = String(d % 60).padStart(2, '0');
+    return jam + ':' + menit + ':' + detik;
+  }
+
   function renderMonitoring(monitoring) {
     const body = document.getElementById('monitoringBody');
     body.innerHTML = '';
@@ -804,7 +822,7 @@
     timerGrid.innerHTML = '';
 
     if (!monitoring || monitoring.length === 0) {
-      body.innerHTML = '<tr class="status-idle"><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
+      body.innerHTML = '<tr class="status-idle"><td colspan="6" style="text-align:center; color:var(--text-muted);">Belum ada data staf.</td></tr>';
       timerEmpty.style.display = 'block';
       return;
     }
@@ -841,12 +859,18 @@
         timerGrid.appendChild(card);
       }
 
+      const adaJamKeluar = row.jamKeluarTerakhirDetik !== null && row.jamKeluarTerakhirDetik !== undefined;
+      const jamTerakhirHtml = adaJamKeluar
+        ? '<span class="jam-terakhir">' + formatJamKeluar(row.jamKeluarTerakhirDetik) + '</span>'
+        : '<span class="jam-terakhir empty">-</span>';
+
       tr.innerHTML = `
         <td class="name-cell">${row.nama}</td>
         <td class="dept-tag">${row.departemen}</td>
         <td>${row.izin}</td>
         <td>${row.sisa}</td>
         <td><span class="pill ${meta.pill}">${meta.label}</span>${countdownHtml}</td>
+        <td>${jamTerakhirHtml}</td>
       `;
       body.appendChild(tr);
     });
